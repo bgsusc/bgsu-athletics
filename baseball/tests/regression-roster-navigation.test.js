@@ -26,7 +26,8 @@ test('regression: finishing login re-renders the feature the user opened while d
   for(const active of ['profile','dashboard',undefined]){
     const nav=[];
     const {api}=services({navigate:async id=>{nav.push(id);return true;},activeFeature:()=>active,setTimeout:fn=>{fn();return 0;}});
-    api.sb=createDemoClient(buildDemoTables(new Date('2026-03-01')));api.currentUser={id:'demo'};
+    // A real (non-demo) login: the account is granted Baseball in the shared project.
+    api.sb=Object.assign(createDemoClient(buildDemoTables(new Date('2026-03-01'))),{rpc:async()=>({data:['baseball'],error:null})});api.currentUser={id:'demo'};
     await api.onLoginSuccess();
     assert.deepEqual(nav,Array(2).fill(active||'dashboard'),`active=${active}`);
   }

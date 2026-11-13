@@ -58,8 +58,10 @@ Browser tests need Chrome/Chromium: set `BGSU_BROWSER`, `HOCKEY_BROWSER` and
 
 ## Supabase
 
-- Each sport uses its own Supabase project (Baseball's is not set up yet; schema in
-  `baseball/supabase/schema.sql`). Local dev reads each sport's
+- Supabase (free plan, 2 active projects): Volleyball has its own project; Hockey's project
+  also hosts Baseball (`bb_*` tables, `baseball-photos` bucket). Who sees which sport is
+  `private.sport_access` in that project (see `supabase/shared/001_sport_access.sql`);
+  manage it only from the SQL Editor with `private.grant_sport` / `private.revoke_sport`. Local dev reads each sport's
   git-ignored `<sport>/.env.local` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - Auth > URL Configuration per project must allow the sport's live URL
   (`.../bgsu-athletics/hockey/` or `.../bgsu-athletics/volleyball/`) for sign-in and password reset.

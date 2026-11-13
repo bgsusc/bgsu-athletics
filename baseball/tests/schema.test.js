@@ -1,14 +1,15 @@
 // Guards against the app writing a column the database does not have (Hockey hit this
 // with athletes.sprint_10_date and audit_log). Compares the app's mappings with
-// supabase/schema.sql, the schema the Baseball Supabase project is created from.
+// supabase/schema.sql (bb_ tables in the shared Supabase project).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {services} from './support.js';
 
 const sql=fs.readFileSync(new URL('../supabase/schema.sql',import.meta.url),'utf8');
+import {TABLES,BUCKETS} from '../src/services/data/shared-project.js';
 function columns(table){
-  const m=sql.match(new RegExp(`create table if not exists public\\.${table} \\(([\\s\\S]*?)\\n\\);`));
+  const m=sql.match(new RegExp(`create table if not exists public\\.${TABLES[table]} \\(([\\s\\S]*?)\\n\\);`));
   assert.ok(m,`table ${table} in schema.sql`);
   return new Set(m[1].split(/,(?![^(]*\))/).map(s=>s.trim().split(/\s+/)[0]).filter(Boolean));
 }
@@ -36,9 +37,11 @@ test('kpi_history has the columns the app writes',()=>{
   for(const col of ['athlete_id','athlete_name','metric_key','test_date','value','source']) assert.ok(cols.has(col),`kpi_history.${col}`);
 });
 
-test('schema keeps every table behind RLS and the photo bucket private',()=>{
-  for(const t of ['athletes','test_sessions','kpi_history','trackman_pitches','audit_log']) assert.match(sql,new RegExp(`'${t}'`),`${t} in RLS loop`);
+test('schema keeps every Baseball table behind baseball-only RLS and its photo bucket private',()=>{
+  for(const t of Object.values(TABLES)) assert.match(sql,new RegExp(`'${t}'`),`${t} in RLS loop`);
+  assert.equal(Object.keys(TABLES).length,5);
   assert.match(sql,/enable row level security/);
-  assert.match(sql,/values \('athlete-photos','athlete-photos', false\)/);
-  assert.doesNotMatch(sql,/service_role|to anon/i);
+  assert.equal((sql.match(/has_sport_access\(''baseball''\)|has_sport_access\('baseball'\)/g)||[]).length,8,'every policy checks baseball access');
+  assert.match(sql,new RegExp(`values \\('${BUCKETS['athlete-photos']}','${BUCKETS['athlete-photos']}', false\\)`));
+  assert.doesNotMatch(sql,/service_role|to anon|approved_coach|create table if not exists public\.(athletes|test_sessions|kpi_history|audit_log) /i,'never touches Hockey objects');
 });

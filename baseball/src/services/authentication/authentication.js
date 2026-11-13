@@ -1,4 +1,5 @@
 // Baseball app module (started from the Hockey app).
+import {sharedProjectClient,hasSportAccess} from '../data/shared-project.js';
 // Dependencies are supplied per application instance, never through window.
 export function createModule(context) {
 const document=context.document;
@@ -36,7 +37,7 @@ function initSupabase(){
     document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local, then restart Vite.</span>';
     return false;
   }
-  sb = context.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sb = sharedProjectClient(context.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
 
   // A password-reset email link logs the person in directly (the link itself
   // IS a valid session token) — Supabase fires a PASSWORD_RECOVERY event when
@@ -146,6 +147,20 @@ async function doSignOut(){
 
 
 async function onLoginSuccess(){
+  // The Supabase project is shared by several sports: a valid login is not enough,
+  // the account must also be granted Baseball (private.sport_access).
+  if(!context.api.demoMode){
+    let allowed=false;
+    try{allowed=await hasSportAccess(sb);}catch(e){console.error('Sport access check failed:',e);}
+    if(!allowed){
+      await sb.auth.signOut().catch(()=>{});
+      currentUser=null;
+      document.getElementById('login-overlay').style.display='flex';
+      document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">This account does not have access to the Baseball dashboard. Ask the dashboard administrator to grant it.</span>';
+      setSyncStatus('error','NO ACCESS');
+      return;
+    }
+  }
   document.getElementById('login-overlay').style.display='none';
   setSyncStatus('syncing','LOADING');
   await context.api.loadAllSessions();

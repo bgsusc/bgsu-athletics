@@ -1,24 +1,10 @@
--- BGSU Baseball dashboard: database schema for its OWN Supabase project.
--- Not applied anywhere yet. Run once in the Baseball project's SQL Editor (or as a
--- migration) when the project is activated. Mirrors the Hockey project's security
--- model: every table and the photo bucket are readable/writable only by signed-in
--- users listed in private.approved_coaches. Contains no athlete data.
-
--- ── Approved coaches (managed by hand in the dashboard) ────────────────────────
-create schema if not exists private;
-create table if not exists private.approved_coaches (
-  user_id  uuid primary key references auth.users(id) on delete cascade,
-  added_at timestamptz not null default now()
-);
-create or replace function private.is_approved_coach()
-returns boolean language sql stable security definer set search_path = ''
-as $$ select exists (select 1 from private.approved_coaches where user_id = auth.uid()) $$;
-revoke all on schema private from anon, authenticated;
-grant usage on schema private to authenticated;
-grant execute on function private.is_approved_coach() to authenticated;
+-- BGSU Baseball dashboard tables, hosted in the SHARED Supabase project
+-- ("BGSU Hockey Dashboard"). Apply AFTER ../../supabase/shared/001_sport_access.sql.
+-- Everything is new and prefixed bb_; no existing (Hockey) object is changed.
+-- Access: only logins granted 'baseball' in private.sport_access. Contains no athlete data.
 
 -- ── Athletes: one row per player (columns = baseball/src/services/data/persistence.js DB_FIELDS)
-create table if not exists public.athletes (
+create table if not exists public.bb_athletes (
   id bigint generated always as identity primary key,
   canonical_name text not null,
   display_name text, initials text,
@@ -43,9 +29,9 @@ create table if not exists public.athletes (
 );
 
 -- ── VALD force plate (and broad-jump testing) sessions
-create table if not exists public.test_sessions (
+create table if not exists public.bb_test_sessions (
   id bigint generated always as identity primary key,
-  athlete_id bigint references public.athletes(id) on delete set null,
+  athlete_id bigint references public.bb_athletes(id) on delete set null,
   athlete_name text not null,
   test_date date not null,
   jump_height numeric, takeoff_velocity numeric, peak_power numeric, rsi_mod numeric,
@@ -55,12 +41,12 @@ create table if not exists public.test_sessions (
   session_type text, drill_name text, source_file text, created_by text,
   created_at timestamptz default now()
 );
-create index if not exists test_sessions_athlete_date on public.test_sessions (athlete_id, test_date);
+create index if not exists bb_test_sessions_athlete_date on public.bb_test_sessions (athlete_id, test_date);
 
 -- ── Dated test results (progress tracking, best-recent values)
-create table if not exists public.kpi_history (
+create table if not exists public.bb_kpi_history (
   id bigint generated always as identity primary key,
-  athlete_id bigint references public.athletes(id) on delete set null,
+  athlete_id bigint references public.bb_athletes(id) on delete set null,
   athlete_name text not null,
   metric_key text not null,
   test_date date not null,
@@ -71,7 +57,7 @@ create table if not exists public.kpi_history (
 
 -- ── Trackman pitch-by-pitch rows (only pitches involving a roster athlete are stored;
 --    opponent names are blanked by the importer)
-create table if not exists public.trackman_pitches (
+create table if not exists public.bb_trackman_pitches (
   id bigint generated always as identity primary key,
   pitch_uid text unique,
   pitch_date date not null,
@@ -80,10 +66,10 @@ create table if not exists public.trackman_pitches (
   exit_speed numeric, launch_angle numeric, distance numeric, hit_spin numeric,
   source_file text, created_by text, created_at timestamptz default now()
 );
-create index if not exists trackman_pitches_date on public.trackman_pitches (pitch_date);
+create index if not exists bb_trackman_pitches_date on public.bb_trackman_pitches (pitch_date);
 
 -- ── Change history (columns match what the app writes; see Hockey's open audit-log issue)
-create table if not exists public.audit_log (
+create table if not exists public.bb_audit_log (
   id bigint generated always as identity primary key,
   changed_at timestamptz default now(),
   changed_by text,
@@ -93,32 +79,32 @@ create table if not exists public.audit_log (
   changed_fields jsonb
 );
 
--- ── Row-Level Security: approved coaches only (same policies as Hockey)
+-- ── Row-Level Security: logins granted 'baseball' only
 do $$
 declare t text;
 begin
-  foreach t in array array['athletes','test_sessions','kpi_history','trackman_pitches','audit_log'] loop
+  foreach t in array array['bb_athletes','bb_test_sessions','bb_kpi_history','bb_trackman_pitches','bb_audit_log'] loop
     execute format('alter table public.%I enable row level security', t);
-    execute format('create policy approved_coach_select on public.%I for select to authenticated using ((select private.is_approved_coach()))', t);
-    execute format('create policy approved_coach_insert on public.%I for insert to authenticated with check ((select private.is_approved_coach()))', t);
+    execute format('create policy baseball_select on public.%I for select to authenticated using ((select private.has_sport_access(''baseball'')))', t);
+    execute format('create policy baseball_insert on public.%I for insert to authenticated with check ((select private.has_sport_access(''baseball'')))', t);
   end loop;
-  foreach t in array array['athletes','test_sessions','kpi_history','trackman_pitches'] loop
-    execute format('create policy approved_coach_update on public.%I for update to authenticated using ((select private.is_approved_coach())) with check ((select private.is_approved_coach()))', t);
+  foreach t in array array['bb_athletes','bb_test_sessions','bb_kpi_history','bb_trackman_pitches'] loop
+    execute format('create policy baseball_update on public.%I for update to authenticated using ((select private.has_sport_access(''baseball''))) with check ((select private.has_sport_access(''baseball'')))', t);
   end loop;
-  foreach t in array array['athletes','test_sessions','trackman_pitches'] loop
-    execute format('create policy approved_coach_delete on public.%I for delete to authenticated using ((select private.is_approved_coach()))', t);
+  foreach t in array array['bb_athletes','bb_test_sessions','bb_trackman_pitches'] loop
+    execute format('create policy baseball_delete on public.%I for delete to authenticated using ((select private.has_sport_access(''baseball'')))', t);
   end loop;
 end $$;
 
--- ── Private photo bucket
-insert into storage.buckets (id, name, public) values ('athlete-photos','athlete-photos', false)
+-- ── Private photo bucket (separate from Hockey's athlete-photos)
+insert into storage.buckets (id, name, public) values ('baseball-photos','baseball-photos', false)
   on conflict (id) do update set public = false;
-create policy "Approved coaches view photos" on storage.objects for select to authenticated
-  using (bucket_id = 'athlete-photos' and (select private.is_approved_coach()));
-create policy "Approved coaches upload photos" on storage.objects for insert to authenticated
-  with check (bucket_id = 'athlete-photos' and (select private.is_approved_coach()));
-create policy "Approved coaches delete photos" on storage.objects for delete to authenticated
-  using (bucket_id = 'athlete-photos' and (select private.is_approved_coach()));
+create policy "Baseball coaches view photos" on storage.objects for select to authenticated
+  using (bucket_id = 'baseball-photos' and (select private.has_sport_access('baseball')));
+create policy "Baseball coaches upload photos" on storage.objects for insert to authenticated
+  with check (bucket_id = 'baseball-photos' and (select private.has_sport_access('baseball')));
+create policy "Baseball coaches delete photos" on storage.objects for delete to authenticated
+  using (bucket_id = 'baseball-photos' and (select private.has_sport_access('baseball')));
 
 -- Realtime (the app subscribes to athlete changes)
-alter publication supabase_realtime add table public.athletes;
+alter publication supabase_realtime add table public.bb_athletes;

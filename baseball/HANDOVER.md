@@ -33,17 +33,28 @@ copied: Baseball has no "original" HTML. Its tests are all synthetic and run in 
 All ranges in `NORMS` (composite.js) are estimates for a college roster. Tighten them once
 real testing/Trackman data exists (e.g. 10th–90th percentile by position).
 
-## Database (not created yet)
-`supabase/schema.sql` creates the Baseball project's tables (athletes, test_sessions,
-kpi_history, trackman_pitches, audit_log), approved-coach RLS identical to Hockey's, a private
-`athlete-photos` bucket and realtime on athletes. `tests/schema.test.js` fails if the app
-writes a column the schema lacks. To go live: activate the "BGSU Baseball Dashboard"
-Supabase project, run the schema, add coaches to `private.approved_coaches`, set Auth URL
-configuration to `https://bgsusc.github.io/bgsu-athletics/baseball/`, and add repo variables
-`BASEBALL_SUPABASE_URL` / `BASEBALL_SUPABASE_ANON_KEY`.
+## Database: shared Supabase project (free plan)
+The org's Free plan allows two active projects, so Baseball lives in the **"BGSU Hockey
+Dashboard"** project instead of its own. Isolation:
+- Baseball tables are `bb_*` (`bb_athletes`, `bb_test_sessions`, `bb_kpi_history`,
+  `bb_trackman_pitches`, `bb_audit_log`) and photos use the private `baseball-photos` bucket.
+  `src/services/data/shared-project.js` maps the app's plain table names onto these on the
+  real client only, and throws on any other table, so Baseball cannot touch Hockey data.
+- Per-sport access: `private.sport_access` (repo `supabase/shared/001_sport_access.sql`).
+  Every Baseball policy checks `private.has_sport_access('baseball')`. At sign-in the app
+  calls `public.my_sports()` and signs out logins without Baseball access, with a message.
+- Apply order: `supabase/shared/001_sport_access.sql`, then `baseball/supabase/schema.sql`.
+- Manage access in the SQL Editor: `select private.grant_sport('coach@…','baseball');`,
+  `private.revoke_sport(...)`, `select * from private.sport_access_by_email;`.
+- Deploy: repo variables `BASEBALL_SUPABASE_URL` / `BASEBALL_SUPABASE_ANON_KEY` hold the
+  SAME values as Hockey's. Auth > URL Configuration of that project must also allow
+  `https://bgsusc.github.io/bgsu-athletics/baseball/` (keep Hockey's entries).
+`tests/schema.test.js` fails if the app writes a column the schema lacks or a policy
+stops checking Baseball access; `tests/shared-project.test.js` covers the name mapping and
+the no-access sign-out.
 
 ## Verified (2026-11-13, Linux, Chromium)
-`npm test` 57/57; build OK (large-chunk warning only); `tests/demo-check.js` PASS: 12/12
+`npm test` 63/63; build OK (large-chunk warning only); `tests/demo-check.js` PASS: 12/12
 features render with no errors/NaN, 12 feature scenarios, Trackman hitting/pitching tables,
 sparse athletes, CSV import preview/save/duplicate skip, no backend traffic. Root
 `tests/pages-check.js` PASS for all three sports under `/bgsu-athletics/`.
