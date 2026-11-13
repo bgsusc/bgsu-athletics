@@ -53,12 +53,12 @@ Each sport also has an **Explore Demo** button on its login screen that opens th
 
 ## GitHub Pages deployment
 
-- **Site:** https://simeonkommathoty.github.io/bgsu-athletics/ (Hockey `/hockey/`, Volleyball `/volleyball/`; Demo: append `#demo`)
-- **Repo:** https://github.com/simeonkommathoty/bgsu-athletics, deploys from the `main` branch via `.github/workflows/deploy-pages.yml` (Settings > Pages > Source: GitHub Actions).
+- **Site:** https://bgsusc.github.io/bgsu-athletics/ (Hockey `/hockey/`, Volleyball `/volleyball/`; Demo: append `#demo`)
+- **Repo:** https://github.com/bgsusc/bgsu-athletics, deploys from the `main` branch via `.github/workflows/deploy-pages.yml` (Settings > Pages > Source: GitHub Actions).
 - **Publish an update:** commit, then `git push origin main`. The workflow installs from lockfiles, runs unit tests, builds the portal and both sports, runs `tests/pages-check.js` (serves `dist/` under `/bgsu-athletics/` and drives all 23 features in Demo Mode), then deploys. It can also be run manually from the Actions tab.
 - **Local:** `npm run install:all`, `npm run dev`, `npm run build`, `npm run preview`, `node tests/pages-check.js` (needs Chrome; `BGSU_BROWSER` overrides the path). All asset URLs are relative (`base: './'`), so no base-path config is needed.
 - **Supabase (optional; without it the site is demo-only):** add repository **variables** (Settings > Secrets and variables > Actions > Variables) `HOCKEY_SUPABASE_URL`, `HOCKEY_SUPABASE_ANON_KEY`, `VOLLEYBALL_SUPABASE_URL`, `VOLLEYBALL_SUPABASE_ANON_KEY`. The workflow writes them to each sport's own `.env.production`. These are public browser values; never use a service-role key. Hockey's `VITE_HOCKEY_NICKNAME_ALIASES` / `VITE_HOCKEY_FORMER_PLAYERS` contain athlete names and are intentionally not set in CI.
-- **Auth redirects (per Supabase project, Auth > URL Configuration):** Hockey: add `https://simeonkommathoty.github.io/bgsu-athletics/hockey/`; Volleyball: add `https://simeonkommathoty.github.io/bgsu-athletics/volleyball/`; set Site URL to the matching one. Live login on the hosted site has not been verified.
+- **Auth redirects (per Supabase project, Auth > URL Configuration):** Hockey: add `https://bgsusc.github.io/bgsu-athletics/hockey/`; Volleyball: add `https://bgsusc.github.io/bgsu-athletics/volleyball/`; set Site URL to the matching one. Live login on the hosted site has not been verified.
 - **Troubleshooting:** open the failed run in the Actions tab; the failing step names the cause (tests, build output, browser check). Blank page: check the Network tab for 404s on assets.
 - **Roll back:** `git revert <bad-commit>` and push (never force-push), or re-run an earlier successful workflow run from the Actions tab.
 
