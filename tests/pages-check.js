@@ -13,7 +13,7 @@ const BASE=(process.env.BASE||'/bgsu-athletics/').replace(/\/?$/,'/');
 const PORT=Number(process.env.PORT||5172),ORIGIN=`http://127.0.0.1:${PORT}`;
 const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.map':'application/json'};
 const avatarPages=[];
-const SPORTS=[{id:'hockey',features:12},{id:'volleyball',features:11}];
+const SPORTS=[{id:'hockey',features:12,players:14},{id:'volleyball',features:11,players:14},{id:'baseball',features:12,players:16}];
 const BACKEND=/\.supabase\.(co|in)|\/rest\/v1|\/auth\/v1|\/storage\/v1|\/realtime\/v1/i;
 
 const server=http.createServer((req,res)=>{
@@ -69,9 +69,9 @@ try{
     // Direct deep link + refresh keep demo.
     await page.goto(`${ORIGIN}${BASE}${sport.id}/#demo`);await page.reload();
     await page.waitForFunction(()=>document.getElementById('demo-banner'),null,{timeout:20000});
-    await page.waitForFunction(()=>/Demo (Forward|Defense|Goalie|Setter|Outside|Middle|Libero|Opposite|Hitter|Athlete)/i.test(document.querySelector('[data-feature-root]')?.shadowRoot?.textContent||''),null,{timeout:20000});
+    await page.waitForFunction(()=>/Demo (Forward|Defense|Goalie|Setter|Outside|Middle|Libero|Opposite|Hitter|Athlete|Pitcher|Catcher|Infielder|Outfielder)/i.test(document.querySelector('[data-feature-root]')?.shadowRoot?.textContent||''),null,{timeout:20000});
     // Regression: a click made while the demo data is still loading must not be overridden by the
-    // post-load re-render (it used to jump back to the dashboard), and all 14 players must be distinct.
+    // post-load re-render (it used to jump back to the dashboard), and every synthetic player must be distinct.
     await page.goto(`${ORIGIN}${BASE}${sport.id}/#demo`);
     await page.waitForFunction(()=>document.getElementById('demo-banner'),null,{timeout:20000});
     await page.locator('#feature-nav [data-feature="profile"]').click();
@@ -79,7 +79,7 @@ try{
     const early=await page.evaluate(()=>{const r=document.querySelector('[data-feature-root]')?.shadowRoot;const sel=r?.querySelector('#profile-sel');
       return {active:document.querySelector('#feature-nav .active')?.dataset.feature,options:sel?.options.length,selected:sel?.selectedOptions[0]?.textContent.replace(/\s*\(.*$/,'').trim(),hero:r?.querySelector('#prof-hero')?.innerText||''};});
     assert.equal(early.active,'profile',`${sport.id}: early click kept (not overridden by post-load dashboard navigation)`);
-    assert.equal(early.options,14,`${sport.id}: all 14 synthetic players are distinct (none merged by dedupe)`);
+    assert.equal(early.options,sport.players,`${sport.id}: all ${sport.players} active synthetic players are distinct (none merged by dedupe)`);
     assert.ok(early.hero.toUpperCase().includes(early.selected.toUpperCase()),`${sport.id}: profile card "${early.hero.slice(0,30)}" matches dropdown "${early.selected}"`);
     const ids=await page.locator('#feature-nav [data-feature]').evaluateAll(n=>n.map(x=>x.dataset.feature));
     assert.equal(ids.length,sport.features,`${sport.id} feature count`);
@@ -148,7 +148,7 @@ try{
   assert.equal(await page.locator('#reset-password-confirm').count(),1);
   console.log('PASS volleyball sign-in shows Forgot password? (reset screen hidden until a recovery link)');
 
-  assert.equal(avatarPages.length,4,'avatar verified on roster and profile of both sports');console.log('PASS demo avatar rendered:',avatarPages.join(', '));
+  assert.equal(avatarPages.length,SPORTS.length*2,'avatar verified on roster and profile of every sport');console.log('PASS demo avatar rendered:',avatarPages.join(', '));
   assert.deepEqual(all.filter(u=>BACKEND.test(u)),[],'no Supabase request');
   assert.deepEqual(sockets.filter(u=>!u.startsWith('ws://127.0.0.1')),[],'no remote websocket');
   assert.deepEqual(external.filter(u=>!/fonts\.(googleapis|gstatic)\.com/.test(u)),[],'only fonts requested externally');

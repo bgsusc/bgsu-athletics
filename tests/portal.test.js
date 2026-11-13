@@ -9,8 +9,8 @@ const sportPage=page('<!doctype html><html><body><div id="x-app"></div></body></
 const portalPage=page('<!doctype html><html><body><div id="portal-root"></div></body></html>');
 const base='http://localhost/';
 
-test('registry defines hockey and volleyball with required fields',()=>{
-  assert.deepEqual(sports.map(s=>s.id),['hockey','volleyball']);
+test('registry defines hockey, volleyball and baseball with required fields',()=>{
+  assert.deepEqual(sports.map(s=>s.id),['hockey','volleyball','baseball']);
   for(const s of sports)for(const key of ['id','name','description','icon','path','enabled','order'])assert.ok(s[key]!==undefined,`${s.id}.${key}`);
 });
 test('disabled and malformed sports are hidden; order is respected',()=>{
@@ -21,7 +21,7 @@ test('a synthetic third sport renders a card with no layout edit',async()=>{
   const third={id:'soccer',name:'Soccer',description:'d',icon:'<svg></svg>',path:'soccer/',enabled:true,order:3};
   const found=await availableSports([...sports,third],async()=>sportPage,base);
   const html=renderCards(found);
-  assert.equal((html.match(/class="sport-card"/g)||[]).length,3);
+  assert.equal((html.match(/class="sport-card"/g)||[]).length,sports.length+1);
   assert.match(html,/href="soccer\/"/);
 });
 test('missing, failing or portal-fallback application paths are hidden gracefully',async()=>{
@@ -39,6 +39,6 @@ test('cards escape registry text',()=>{
   assert.doesNotMatch(renderCards([{id:'x',name:'<img onerror=1>',path:'x/'}]),/<img/);
 });
 test('portal renders no hardcoded sport cards in HTML and has no auth logic',()=>{
-  assert.doesNotMatch(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/Hockey|Volleyball/);
+  assert.doesNotMatch(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/Hockey|Volleyball|Baseball/);
   assert.doesNotMatch(fs.readFileSync(new URL('../src/portal.js',import.meta.url),'utf8'),/supabase|signIn|password/i);
 });

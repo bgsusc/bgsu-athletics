@@ -26,6 +26,7 @@ jobs:
             package-lock.json
             hockey/package-lock.json
             volleyball/package-lock.json
+            baseball/package-lock.json
 
       - name: Install dependencies (lockfiles)
         run: npm run install:all
@@ -40,6 +41,8 @@ jobs:
           for sport in hockey volleyball; do
             (cd $sport && ls tests/*.test.js | grep -v integrity | xargs node --test --test-name-pattern="$RUN")
           done
+          # Baseball has no private reference file, so its whole unit suite runs in CI.
+          npm test --prefix baseball
 
       # Supabase values are optional repository VARIABLES (not secrets): VITE_ values are
       # public in the built JS. Without them the site is a demo-only build.
@@ -51,6 +54,8 @@ jobs:
           HOCKEY_SUPABASE_ANON_KEY: ${{ vars.HOCKEY_SUPABASE_ANON_KEY }}
           VOLLEYBALL_SUPABASE_URL: ${{ vars.VOLLEYBALL_SUPABASE_URL }}
           VOLLEYBALL_SUPABASE_ANON_KEY: ${{ vars.VOLLEYBALL_SUPABASE_ANON_KEY }}
+          BASEBALL_SUPABASE_URL: ${{ vars.BASEBALL_SUPABASE_URL }}
+          BASEBALL_SUPABASE_ANON_KEY: ${{ vars.BASEBALL_SUPABASE_ANON_KEY }}
         run: |
           if [ -n "$HOCKEY_SUPABASE_URL" ] && [ -n "$HOCKEY_SUPABASE_ANON_KEY" ]; then
             printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' "$HOCKEY_SUPABASE_URL" "$HOCKEY_SUPABASE_ANON_KEY" > hockey/.env.production
@@ -62,13 +67,18 @@ jobs:
           else
             echo "::notice::Volleyball Supabase variables not set - Volleyball builds demo-only."
           fi
+          if [ -n "$BASEBALL_SUPABASE_URL" ] && [ -n "$BASEBALL_SUPABASE_ANON_KEY" ]; then
+            printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' "$BASEBALL_SUPABASE_URL" "$BASEBALL_SUPABASE_ANON_KEY" > baseball/.env.production
+          else
+            echo "::notice::Baseball Supabase variables not set - Baseball builds demo-only."
+          fi
 
-      - name: Build portal, Hockey and Volleyball
+      - name: Build portal, Hockey, Volleyball and Baseball
         run: npm run build
 
       - name: Verify build output
         run: |
-          for f in dist/index.html dist/assets dist/hockey/index.html dist/hockey/assets dist/volleyball/index.html dist/volleyball/assets; do
+          for f in dist/index.html dist/assets dist/hockey/index.html dist/hockey/assets dist/volleyball/index.html dist/volleyball/assets dist/baseball/index.html dist/baseball/assets; do
             test -e "$f" || { echo "::error::missing $f"; exit 1; }
           done
           if grep -rIlE 'service_role|sb_secret_' dist; then echo "::error::secret-like string in build"; exit 1; fi

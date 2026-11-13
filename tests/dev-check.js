@@ -11,6 +11,7 @@ try{
   assert.equal((await get('/hockey')).location,'/hockey/');
   assert.match((await get('/hockey/')).body,/hockey-app/);
   assert.match((await get('/volleyball/')).body,/volleyball-app/);
-  console.log('PASS dev server serves portal, /hockey/ and /volleyball/');
+  assert.match((await get('/baseball/')).body,/baseball-app/);
+  console.log('PASS dev server serves portal, /hockey/, /volleyball/ and /baseball/');
 }finally{child.kill();}
 process.exit(0);

@@ -16,11 +16,11 @@ try{
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/');
   await page.waitForSelector('.sport-card');
-  assert.deepEqual(await page.locator('.sport-card').evaluateAll(n=>n.map(x=>x.dataset.sport)),['hockey','volleyball']);
-  assert.ok(await page.locator('.sport-card svg').count()===2,'icons render');
+  assert.deepEqual(await page.locator('.sport-card').evaluateAll(n=>n.map(x=>x.dataset.sport)),['hockey','volleyball','baseball']);
+  assert.ok(await page.locator('.sport-card svg').count()===3,'icons render');
 
   // Each card reaches its independently built application (sign-in screen, no data).
-  for(const [id,appRoot] of [['hockey','#hockey-app'],['volleyball','#volleyball-app']]){
+  for(const [id,appRoot] of [['hockey','#hockey-app'],['volleyball','#volleyball-app'],['baseball','#baseball-app']]){
     await page.goto(origin+'/');await page.waitForSelector('.sport-card');
     await page.locator(`[data-sport="${id}"]`).click();
     await page.waitForURL(`**/${id}/`);
@@ -41,7 +41,7 @@ try{
     await page.waitForSelector('.sport-card');
   }
   // Sports Home button: login screen, demo dashboard, browser back, and sub-path hosting.
-  for(const [id,appRoot] of [['hockey','#hockey-app'],['volleyball','#volleyball-app']]){
+  for(const [id,appRoot] of [['hockey','#hockey-app'],['volleyball','#volleyball-app'],['baseball','#baseball-app']]){
     await page.goto(`${origin}/${id}/`);await page.waitForSelector('#login-overlay',{state:'visible'});
     await page.locator('#login-sports-home').click();
     await page.waitForSelector('.sport-card');
@@ -65,7 +65,7 @@ try{
   // Disabled / missing sports are hidden: stub the registry-visible fetches.
   await page.route('**/volleyball/',route=>route.fulfill({status:404,body:'missing'}));
   await page.goto(origin+'/');await page.reload();await page.waitForSelector('.sport-card');
-  assert.deepEqual(await page.locator('.sport-card').evaluateAll(n=>n.map(x=>x.dataset.sport)),['hockey'],'unavailable application is hidden');
+  assert.deepEqual(await page.locator('.sport-card').evaluateAll(n=>n.map(x=>x.dataset.sport)),['hockey','baseball'],'unavailable application is hidden');
   await page.unroute('**/volleyball/');
 
   // Responsive: no horizontal overflow on mobile; cards stack.

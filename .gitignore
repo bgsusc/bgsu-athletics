@@ -12,3 +12,8 @@ volleyball/test-results/
 
 /dist/
 /test-results/
+
+baseball/dist/
+baseball/.env*
+!baseball/.env.example
+baseball/test-results/

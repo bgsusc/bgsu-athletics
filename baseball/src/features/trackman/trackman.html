@@ -1,0 +1,38 @@
+<div class="content page active" id="page-trackman">
+    <div class="stripe"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+      <div>
+        <div style="font-family:var(--fh);font-size:17px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">Trackman — Hitting &amp; Pitching</div>
+        <div class="tm-note" id="tm-summary">—</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="file" id="tm-file" accept=".csv,.CSV,text/csv" style="display:none;" data-onchange="tmFileSelected(event)">
+        <button class="btn btn-or" id="tm-import-btn" data-onclick="tmChooseFile()">⬆ Import Trackman CSV</button>
+      </div>
+    </div>
+    <div class="card" id="tm-import-card" style="display:none;margin-bottom:14px;">
+      <div class="card-header"><div class="ctitle"><div class="cdot"></div>Import preview</div></div>
+      <div class="tm-preview" id="tm-preview"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-or" id="tm-save-btn" data-onclick="tmSave()">✓ Save to roster</button>
+        <button class="btn" data-onclick="tmCancel()">Cancel</button>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(6,1fr);" id="tm-kpis"></div>
+    <div class="tm-tabs">
+      <div class="chip active" id="tm-tab-hit" data-onclick="tmSetTab('hit')">Hitting</div>
+      <div class="chip" id="tm-tab-pitch" data-onclick="tmSetTab('pitch')">Pitching</div>
+      <span class="tm-note" id="tm-tab-note"></span>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header"><div class="ctitle"><div class="cdot"></div><span id="tm-table-title">Hitting leaderboard</span></div></div>
+      <div class="tw"><table><thead id="tm-thead"></thead><tbody id="tm-tbody"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="ctitle"><div class="cdot"></div><span id="tm-chart-title">Exit velocity by session</span></div>
+        <select id="tm-ath-sel" data-onchange="tmRenderChart()" style="min-width:180px;"></select>
+      </div>
+      <div class="cw" style="height:260px;"><canvas id="tm-trend" role="img" aria-label="Trackman trend by session">Per-session max and average for the selected athlete.</canvas></div>
+    </div>
+</div>
