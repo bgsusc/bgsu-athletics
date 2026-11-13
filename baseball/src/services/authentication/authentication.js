@@ -18,6 +18,25 @@ const SUPABASE_ANON_KEY = context.config.supabaseKey;
 
 let sb = null;
 
+// Password recovery: a reset-email link signs the person in with a short-lived recovery
+// session. That session is only for choosing a new password: the dashboard (and the
+// Baseball access check, which signs people out) must not run on it, or the session is
+// gone before the new password is saved ("Auth session missing").
+let recoveryMode = false;   // PASSWORD_RECOVERY seen
+let recoveryHint = false;   // the URL is a recovery link (read before supabase-js consumes it)
+let recoveryLinkError = ''; // the link was expired / already used
+function readRecoveryLink(){
+  const loc=window.location||{};
+  const params=new URLSearchParams(String(loc.hash||'').replace(/^#/,'')+'&'+String(loc.search||'').replace(/^[?]/,''));
+  recoveryLinkError=params.get('error_description')||params.get('error')||'';
+  recoveryHint=!recoveryLinkError&&params.get('type')==='recovery';
+}
+function showResetScreen(){
+  recoveryMode=true;
+  document.getElementById('login-overlay').style.display='none';
+  document.getElementById('reset-password-overlay').style.display='flex';
+}
+
 // Supabase client
 let currentUser = null;
 
@@ -37,6 +56,7 @@ function initSupabase(){
     document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local, then restart Vite.</span>';
     return false;
   }
+  readRecoveryLink();
   sb = sharedProjectClient(context.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
 
   // A password-reset email link logs the person in directly (the link itself
@@ -46,10 +66,7 @@ function initSupabase(){
   // OLD password unchanged and no way to actually set a new one. Catch that
   // case here and show the "set new password" screen instead.
   sb.auth.onAuthStateChange((event, session)=>{
-    if(event==='PASSWORD_RECOVERY'){
-      document.getElementById('login-overlay').style.display='none';
-      document.getElementById('reset-password-overlay').style.display='flex';
-    }
+    if(event==='PASSWORD_RECOVERY') showResetScreen();
   });
 
   return true;
@@ -86,6 +103,7 @@ async function doSetNewPassword(){
     const {data,error}=await sb.auth.updateUser({password:pw});
     if(error) throw error;
     currentUser=data.user;
+    recoveryMode=false;recoveryHint=false;
     msg.innerHTML='<span style="color:var(--green);">✓ Password updated. Loading dashboard...</span>';
     setTimeout(async ()=>{
       document.getElementById('reset-password-overlay').style.display='none';
@@ -184,7 +202,13 @@ async function bootSupabase(){
   if(context.api.demoMode) return;
   if(!initSupabase()) return;
   const {data:{session}} = await sb.auth.getSession();
-  if(session){
+  if(recoveryLinkError){
+    document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">That password reset link has expired or was already used. Enter your email and click "Forgot password?" for a new one.</span>';
+  }
+  if(session&&(recoveryMode||recoveryHint)){
+    currentUser=session.user;
+    showResetScreen();                         // never load data on a recovery session
+  } else if(session){
     currentUser=session.user;
     await onLoginSuccess();
   } else {
@@ -200,6 +224,7 @@ return Object.defineProperties({}, {
   syncing: {enumerable:true, configurable:true, get:()=>syncing, set:value=>{syncing=value;}},
   isLocalChange: {enumerable:true, configurable:true, get:()=>isLocalChange, set:value=>{isLocalChange=value;}},
   initSupabase: {enumerable:true, configurable:true, get:()=>initSupabase},
+  recoveryMode: {enumerable:true, configurable:true, get:()=>recoveryMode},
   doForgotPassword: {enumerable:true, configurable:true, get:()=>doForgotPassword},
   doSetNewPassword: {enumerable:true, configurable:true, get:()=>doSetNewPassword},
   setSyncStatus: {enumerable:true, configurable:true, get:()=>setSyncStatus},
