@@ -32,6 +32,7 @@ create table if not exists public.athletes (
   fly_10 numeric, fly_10_date date,
   home_to_first numeric, home_to_first_date date,
   trap_bar_max numeric, trap_bar_max_date date,
+  back_squat_max numeric, back_squat_max_date date,
   front_squat_max numeric, front_squat_max_date date,
   bench_max numeric, bench_max_date date,
   med_ball_velo numeric, med_ball_velo_date date,

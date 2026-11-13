@@ -6,7 +6,7 @@ stay independent.
 
 ## What it tracks
 - **Testing:** Broad Jump, Vertical Jump; 60-yd Dash, 10-yd Split, 10-yd Fly, Home to 1st;
-  Trap Bar DL, Front Squat, Bench Press (1RM), Med Ball Velo (mph).
+  Trap Bar DL, Back Squat, Front Squat, Bench Press (1RM), Med Ball Velo (mph).
 - **VALD ForceDecks** CMJ force plate and the Readiness Hub (unchanged from Hockey).
 - **Trackman** (replaces Hockey's Firstbeat wearable workload): exit velocity, launch
   angle, distance, hard-hit % (95+ mph), sweet-spot % (8–32°), batted-ball spin; fastball

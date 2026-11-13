@@ -6,7 +6,7 @@
     broadJump:99+id,broadJumpDate:'2026-10-15',cmjHeight:25+id/2,sixtyYard:7.2-id/50,
     split10:1.70-id/100,fly10:1.12-id/100,homeToFirst:4.5-id/50,peakPower:2800+id*100,rsi:0.35+id/100,asymmetry:3+id/2,eccRFD:2500+id*100,
     concImpulse:180+id,eccImpulse:160+id,contractionTime:720-id,takeoffVelocity:2.8+id/100,concImpulseAsym:4,eccBrakingAsym:5,
-    frontSquatMax:275+id*5,trapBarMax:420+id*10,medBallVelo:38+id/2,benchMax:205+id*5,
+    backSquatMax:345+id*5,frontSquatMax:275+id*5,trapBarMax:420+id*10,medBallVelo:38+id/2,benchMax:205+id*5,
     composite:65,tier:'Advanced',
   }));
 }

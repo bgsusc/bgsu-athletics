@@ -11,7 +11,7 @@ const requestAnimationFrame=context.requestAnimationFrame;
 // Metrics with full dated history logged via kpi_history (Force Plate/VALD
 // metrics are NOT included here — those stay on the existing "always latest
 // real session" system via enrichAthletesFromSessions above).
-const BEST_RECENT_METRIC_KEYS=['broadJump','cmjHeight','sixtyYard','split10','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst'];
+const BEST_RECENT_METRIC_KEYS=['broadJump','cmjHeight','sixtyYard','split10','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst'];
 
 
 const BEST_RECENT_WINDOW_DAYS=270;

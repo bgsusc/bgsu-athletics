@@ -34,7 +34,7 @@ const SRC_INFO = {
 Required: Name, Position (P/C/IF/OF; RHP, SS, CF etc. are recognised)
 Jumps: Broad Jump, Vertical Jump (CMJHeight)
 Speed: 60-yd Dash, 10-yd Split, 10-yd Fly, Home to 1st (seconds)
-Strength: Trap Bar DL, Front Squat, Bench Press (1RM lbs), Med Ball Velo (mph)
+Strength: Trap Bar DL, Back Squat, Front Squat, Bench Press (1RM lbs), Med Ball Velo (mph)
 VALD ForceDecks: PeakPower, RSI, Asymmetry, EccRFD, ConcImpulse, EccImpulse, ContractionTime
 Trackman data is imported on the Trackman page, not here.
 Header names are case-insensitive; common aliases are auto-detected.`,
@@ -52,7 +52,7 @@ Efficiency Score is calculated automatically as Movement load ÷ TRIMP.
 All athletes auto-matched to roster — no athlete selection needed.`,
   teambuildr:`Teambuildr Comparison Report — wide format with historical maxes.
 Export from: Teambuildr → Reports → Comparison Report → All athletes → Export CSV.
-Imports: Front Squat, Trap Bar DL, Bench Press, 10-yd Fly, 10-yd Split.
+Imports: Back Squat, Front Squat, Trap Bar DL, Bench Press, 10-yd Fly, 10-yd Split.
 Each athlete's all-time max per exercise is stored.
 Names will be matched to your locked canonical roster automatically.`,
   approachvert:`Broad Jump Testing — simple touch/distance test format.
@@ -75,7 +75,7 @@ one row per athlete/exercise and REPEATING Date+Max column pairs (Max 1,
 Max 2, Max 3...) covering however many tests you've logged over time.
 Expected columns: Name, Exercise, then pairs of (Date, Max) columns.
 Exercise names recognized: Vertical Jump, Broad Jump (ft/in like 9' 6"),
-60-yd Dash, 10-yd Split, Front Squat, Trap Bar DL, Med Ball Velo, Bench
+60-yd Dash, 10-yd Split, Back Squat, Front Squat, Trap Bar DL, Med Ball Velo, Bench
 Press, 10-yd Fly — matched the same way as Single-Test Leaderboard.
 This logs FULL history for every date column found (not just the most
 recent), and also updates each athlete's current value to their latest
@@ -91,9 +91,9 @@ const COL_ALIASES = {
   age:            ['age'],
   test_date:      ['date','test date','session date','date tested','date of test','test_date'],
   broadJump:       ['broadjump','broad jump','broad','standing broad jump','standing long jump','sbj','broad jump (in)'],
-  cmjHeight:      ['cmjheight','cmj height','cmj','cmj ht','jump height (in)','jump height (cm)','jump height (flight time)','countermovement jump','cmj (in)'],
-  sixtyYard:       ['sixtyyard','60yd','60-yd','60 yd','60 yard','60-yard','60 yard dash','60-yd dash','60yd dash','sixty','60'],
-  split10:         ['split10','10yd split','10-yd split','10 yd split','10 yard split','10yd','10-yd','10 yd','10 yard','first 10'],
+  cmjHeight:      ['cmjheight','vertical jump','vert jump','vertical','standing vert','cmj height','cmj','cmj ht','jump height (in)','jump height (cm)','jump height (flight time)','countermovement jump','cmj (in)'],
+  sixtyYard:       ['sixtyyard','60yd','60-yd','60 yd','60 yard','60-yard','sixty'],
+  split10:         ['split10','10yd split','10-yd split','10 yd split','10 yard split','10 split','first 10'],
   peakPower:      ['peakpower','peak power','peak relative power','relative peak power','power (w/kg)','pp w/kg','peak power w/kg','power','power (w)'],
   rsi:            ['rsi','rsi modified','rsi-modified','rsi mod','rsim','mrsi'],
   asymmetry:      ['asymmetry','limb symmetry index','lsi','asymmetry %','lsi %','limb asym','bilateral deficit'],
@@ -104,6 +104,7 @@ const COL_ALIASES = {
   takeoff_velocity:['takeoff velocity','takeoff velo','takeoff vel','to velocity','vertical velocity at takeoff','velocity at takeoff'],
   conc_impulse_asym:['conc impulse asym','concentric impulse asymmetry','conc imp asym','conc impulse asym (-l/+r)','concentric impulse asymmetry (-l/+r)','concentric impulse % (asym)','conc impulse % (asym)'],
   ecc_braking_asym:['ecc braking asym','eccentric braking asymmetry','ecc brake asym','ecc braking asymmetry (-l/+r)','eccentric braking asymmetry (-l/+r)','eccentric braking impulse % (asym)','ecc braking impulse % (asym)'],
+  backSquatMax:   ['backsquatmax','back squat max','back squat','back squat 1rm','back squat (1rm)'],
   frontSquatMax:  ['frontsquatmax','front squat max','front squat','front squat 1rm','front squat (1rm)','fs 1rm','fs max'],
   trapBarMax:      ['trapbarmax','trap bar','trap bar deadlift','trap bar dl','trap bar 1rm','trap bar (1rm)','tbdl','hex bar deadlift','hex bar'],
   medBallVelo:     ['medballvelo','med ball','med ball velo','med ball velocity','rotational med ball','med ball throw','mb velo','mb velocity'],
@@ -606,6 +607,7 @@ const SINGLETEST_METRIC_HINTS = {
   split10:       ['10 yd split','10-yd split','10 yard split','10yd split'],
   fly10:         ['10 yd fly','10-yd fly','10 yard fly','flying 10'],
   homeToFirst:   ['home to first','home to 1st','home-to-first'],
+  backSquatMax:  ['back squat'],
   frontSquatMax: ['front squat'],
   trapBarMax:    ['trap bar','hex bar'],
   medBallVelo:   ['med ball'],
@@ -1275,7 +1277,7 @@ function processRows(rows, src, titleRowDate){
   }
 
   // Track which metric keys were actually in this CSV (for Smart Match selective update)
-  const metricKeys=['broadJump','cmjHeight','sixtyYard','split10','peakPower','rsi','asymmetry','eccRFD','concImpulse','eccImpulse','contractionTime','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst'];
+  const metricKeys=['broadJump','cmjHeight','sixtyYard','split10','peakPower','rsi','asymmetry','eccRFD','concImpulse','eccImpulse','contractionTime','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst'];
   const presentKeys=new Set(metricKeys.filter(k=>colIdx[k]!==null));
   if(colIdx.pos!==null) presentKeys.add('pos');
   if(colIdx.yr!==null) presentKeys.add('yr');
@@ -1328,6 +1330,7 @@ function processRows(rows, src, titleRowDate){
       concImpulse:num('concImpulse')?? null,
       eccImpulse:num('eccImpulse')?? null,
       contractionTime:num('contractionTime')?? null,
+      backSquatMax:num('backSquatMax')?? null,
       frontSquatMax:num('frontSquatMax')?? null,
       trapBarMax:num('trapBarMax')?? null,
       medBallVelo:num('medBallVelo')?? null,
@@ -1346,6 +1349,8 @@ function processRows(rows, src, titleRowDate){
 
 // Teambuildr exercise name → local metric key
 const TB_EX_MAP = {
+  'back squat':           'backSquatMax',
+  'barbell back squat':   'backSquatMax',
   'front squat':          'frontSquatMax',
   'trap bar deadlift':    'trapBarMax',
   'trap bar dl':          'trapBarMax',
@@ -1478,8 +1483,8 @@ function processTBComparison(headers, rows){
   const updates = [];
   const unmatched = [];
   const matched = [];
-  const presentKeys = new Set(['sixtyYard','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','split10','homeToFirst',
-    'sixtyYardDate','frontSquatMaxDate','trapBarMaxDate','medBallVeloDate','benchMaxDate','fly10Date','split10Date','homeToFirstDate']);
+  const presentKeys = new Set(['sixtyYard','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','split10','homeToFirst',
+    'sixtyYardDate','backSquatMaxDate','frontSquatMaxDate','trapBarMaxDate','medBallVeloDate','benchMaxDate','fly10Date','split10Date','homeToFirstDate']);
 
   for(const [rawName, data] of Object.entries(athleteMap)){
     const match = context.api.findBestMatch(rawName);
@@ -1505,8 +1510,8 @@ function processTBComparison(headers, rows){
     (unmatched.length ? ` · ${unmatched.length} unmatched` : '');
 
   // Preview table
-  const previewCols = ['name','sixtyYard','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','split10','homeToFirst'];
-  const previewLabels = ['Athlete','60-yd (s)','Front Squat','Trap Bar DL','Med Ball Velo','Bench Press','10-yd Fly (s)','10-yd Split (s)','Home-1st (s)'];
+  const previewCols = ['name','sixtyYard','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','split10','homeToFirst'];
+  const previewLabels = ['Athlete','60-yd (s)','Back Squat','Front Squat','Trap Bar DL','Med Ball Velo','Bench Press','10-yd Fly (s)','10-yd Split (s)','Home-1st (s)'];
   let msgs = '';
   if(unmatched.length)
     msgs += `<div class="warn">${unmatched.length} unmatched: ${unmatched.slice(0,5).join(', ')}${unmatched.length>5?'...':''}. Will be added as new athletes.</div>`;
@@ -2038,7 +2043,7 @@ async function commitCSV(replace){
   // Teambuildr comparison report: update/merge strength fields only
   if(processRows._isTBComparison){
     const updates=parsedData;
-    const presentKeys=processRows._presentKeys||new Set(['sixtyYard','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','split10','homeToFirst']);
+    const presentKeys=processRows._presentKeys||new Set(['sixtyYard','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','split10','homeToFirst']);
     const fname=readFile._lastName||'teambuildr.csv';
     let updated=0,added=0;
     for(const u of updates){
@@ -2169,13 +2174,13 @@ function loadForEdit(){
   const s=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
   s('m-name',a.name);s('m-pos',a.pos);s('m-yr',a.yr);s('m-age',a.age);
   s('m-appr',a.broadJump);s('m-cmj',a.cmjHeight);s('m-vert',a.sixtyYard);s('m-s10',a.split10);
-  s('m-fs',a.frontSquatMax);s('m-ngc',a.trapBarMax);s('m-beep',a.medBallVelo);s('m-bench',a.benchMax);s('m-hc',a.fly10);s('m-h1b',a.homeToFirst);
+  s('m-bs',a.backSquatMax);s('m-fs',a.frontSquatMax);s('m-ngc',a.trapBarMax);s('m-beep',a.medBallVelo);s('m-bench',a.benchMax);s('m-hc',a.fly10);s('m-h1b',a.homeToFirst);
   s('m-pp',a.peakPower);s('m-rsi',a.rsi);s('m-asym',a.asymmetry);s('m-rfd',a.eccRFD);s('m-ci',a.concImpulse);s('m-ei',a.eccImpulse);s('m-ct',a.contractionTime);
   document.getElementById('man-del-btn').style.display='';
 }
 
 
-function clearManual(){['m-name','m-pos','m-yr','m-age','m-appr','m-cmj','m-vert','m-s10','m-fs','m-ngc','m-beep','m-bench','m-hc','m-h1b','m-pp','m-rsi','m-asym','m-rfd','m-ci','m-ei','m-ct'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('man-del-btn').style.display='none';document.getElementById('man-ok').style.display='none';document.getElementById('man-msgs').innerHTML='';manEditId=null;}
+function clearManual(){['m-name','m-pos','m-yr','m-age','m-appr','m-cmj','m-vert','m-s10','m-bs','m-fs','m-ngc','m-beep','m-bench','m-hc','m-h1b','m-pp','m-rsi','m-asym','m-rfd','m-ci','m-ei','m-ct'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('man-del-btn').style.display='none';document.getElementById('man-ok').style.display='none';document.getElementById('man-msgs').innerHTML='';manEditId=null;}
 
 
 function submitManual(){
@@ -2192,6 +2197,7 @@ function submitManual(){
     cmjHeight:gn('m-cmj')?? null,
     sixtyYard:gn('m-vert')?? null,
     split10:gn('m-s10')?? null,
+    backSquatMax:gn('m-bs')?? null,
     frontSquatMax:gn('m-fs')?? null,
     trapBarMax:gn('m-ngc')?? null,
     medBallVelo:gn('m-beep')?? null,

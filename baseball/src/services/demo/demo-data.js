@@ -57,6 +57,7 @@ export function buildDemoTables(today=new Date()) {
     }
     if(!none&&!NO_STRENGTH.has(i)){
       set('trap_bar_max',Math.round(lerp(365,535,cl(j()))/5)*5);
+      set('back_squat_max',Math.round(lerp(275,425,cl(j()))/5)*5);
       set('front_squat_max',Math.round(lerp(225,335,cl(j()))/5)*5);
       set('bench_max',Math.round(lerp(185,285,cl(j()))/5)*5);
       set('med_ball_velo',+lerp(33,46,cl(j())).toFixed(1));
@@ -70,7 +71,7 @@ export function buildDemoTables(today=new Date()) {
 
     // Dated testing history (4 testing blocks) trending up to the current value.
     const tracked=[['broadJump','broad_jump',false],['cmjHeight','cmj_height',false],['sixtyYard','sixty_yard',true],['split10','split_10',true],
-      ['fly10','fly_10',true],['homeToFirst','home_to_first',true],['trapBarMax','trap_bar_max',false],['frontSquatMax','front_squat_max',false],
+      ['fly10','fly_10',true],['homeToFirst','home_to_first',true],['trapBarMax','trap_bar_max',false],['backSquatMax','back_squat_max',false],['frontSquatMax','front_squat_max',false],
       ['benchMax','bench_max',false],['medBallVelo','med_ball_velo',false]];
     for(const [key,col,lowerBetter] of tracked){
       if(row[col]==null)continue;

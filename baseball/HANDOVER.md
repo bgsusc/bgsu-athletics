@@ -8,7 +8,7 @@ copied: Baseball has no "original" HTML. Its tests are all synthetic and run in 
 ## What changed from Hockey
 - **Positions** P / C / IF / OF (`normPos` maps RHP, SS, CF, etc.). Default for unknown: IF.
 - **Metrics** renamed to their real meaning (Hockey reused old names): `broadJump`, `cmjHeight`,
-  `sixtyYard`, `split10`, `fly10`, `homeToFirst`, `trapBarMax`, `frontSquatMax`, `benchMax`,
+  `sixtyYard`, `split10`, `fly10`, `homeToFirst`, `trapBarMax`, `backSquatMax`, `frontSquatMax`, `benchMax`,
   `medBallVelo`; VALD keys unchanged. Timed tests are lower-is-better everywhere
   (composite, imports, best-recent values, Teambuildr maxes).
 - **No wearables:** Firstbeat workload page, ACWR, TRIMP fields and the session_drills loader

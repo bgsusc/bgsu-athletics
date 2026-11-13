@@ -34,7 +34,7 @@ const VB_RADAR = [
   {
     key:   'strength',
     label: 'Strength Base',
-    desc:  'Trap Bar DL + Front Squat + Bench (avg)',
+    desc:  'Trap Bar DL + Back Squat + Front Squat + Bench (avg)',
     score: (a) => {
       const pos=a.pos||'IF';
       const n=context.api.NORMS[pos]||context.api.NORMS['IF'];
@@ -44,6 +44,7 @@ const VB_RADAR = [
         return hi===lo?0.5:Math.max(0,Math.min(1,(v-lo)/(hi-lo)));
       };
       const lifts=[
+        normLift(a.backSquatMax,'backSquatMax'),
         normLift(a.frontSquatMax,'frontSquatMax'),
         normLift(a.trapBarMax,'trapBarMax'),
         normLift(a.benchMax,'benchMax'),

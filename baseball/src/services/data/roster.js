@@ -55,7 +55,7 @@ function dedupeATHLETES(){
       const dup=a;
 
       // For each numeric metric, keep the better value
-      const metricKeys=['broadJump','cmjHeight','sixtyYard','split10','peakPower','rsi','asymmetry','eccRFD','concImpulse','eccImpulse','contractionTime','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst'];
+      const metricKeys=['broadJump','cmjHeight','sixtyYard','split10','peakPower','rsi','asymmetry','eccRFD','concImpulse','eccImpulse','contractionTime','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst'];
       for(const k of metricKeys){
         const m=context.api.getM(k);
         if(!m) continue;

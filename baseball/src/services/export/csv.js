@@ -10,7 +10,7 @@ const clearTimeout=context.clearTimeout;
 const requestAnimationFrame=context.requestAnimationFrame;
 
 function doExport(){
-  const keys=['name','pos','yr','age','broadJump','cmjHeight','sixtyYard','split10','peakPower','rsi','asymmetry','eccRFD','concImpulse','eccImpulse','contractionTime','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst','maxExitVelo','avgExitVelo','avgLaunchAngle','maxDistance','hardHitPct','sweetSpotPct','maxPitchVelo','avgFbVelo','avgSpinRate','avgIVB','avgHB','avgExtension','composite','tier'];
+  const keys=['name','pos','yr','age','broadJump','cmjHeight','sixtyYard','split10','peakPower','rsi','asymmetry','eccRFD','concImpulse','eccImpulse','contractionTime','backSquatMax','frontSquatMax','trapBarMax','medBallVelo','benchMax','fly10','homeToFirst','maxExitVelo','avgExitVelo','avgLaunchAngle','maxDistance','hardHitPct','sweetSpotPct','maxPitchVelo','avgFbVelo','avgSpinRate','avgIVB','avgHB','avgExtension','composite','tier'];
   // Blank for missing/non-finite numbers (never "NaN"); quote cells containing a comma, quote or newline.
   const cell=v=>{if(v==null||(typeof v==='number'&&!Number.isFinite(v)))return '';const s=String(v);return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
   const rows=[keys,...context.api.rosterAthletes().map(a=>keys.map(k=>a[k]))];

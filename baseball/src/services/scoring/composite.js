@@ -46,10 +46,10 @@ const VALD = {peakPower:[2400,4800],rsi:[0.30,0.60],asymmetry:[2,14],eccRFD:[220
 const HIT  = {maxExitVelo:[95,108],avgExitVelo:[80,92],maxDistance:[340,420],hardHitPct:[25,55],sweetSpotPct:[25,45]};
 const PITCH= {maxPitchVelo:[86,95],avgFbVelo:[84,92],avgSpinRate:[2100,2500],avgExtension:[5.6,6.6]};
 const NORMS = {
-  P:  {broadJump:[100,116],cmjHeight:[26,34],sixtyYard:[6.9,7.6],split10:[1.60,1.75],fly10:[1.05,1.20],homeToFirst:[4.30,4.80],frontSquatMax:[225,315],trapBarMax:[365,495],medBallVelo:[34,44],benchMax:[185,265],...VALD,...HIT,...PITCH},
-  C:  {broadJump:[96,110], cmjHeight:[24,32],sixtyYard:[7.0,7.7],split10:[1.62,1.78],fly10:[1.08,1.22],homeToFirst:[4.40,4.90],frontSquatMax:[245,335],trapBarMax:[405,535],medBallVelo:[34,44],benchMax:[205,285],...VALD,...HIT,...PITCH},
-  IF: {broadJump:[100,116],cmjHeight:[27,35],sixtyYard:[6.7,7.3],split10:[1.55,1.70],fly10:[1.00,1.14],homeToFirst:[4.15,4.55],frontSquatMax:[235,325],trapBarMax:[385,515],medBallVelo:[35,45],benchMax:[195,275],...VALD,...HIT,...PITCH},
-  OF: {broadJump:[102,118],cmjHeight:[28,36],sixtyYard:[6.5,7.1],split10:[1.52,1.66],fly10:[0.96,1.10],homeToFirst:[4.05,4.45],frontSquatMax:[235,325],trapBarMax:[385,515],medBallVelo:[35,45],benchMax:[195,275],...VALD,...HIT,...PITCH},
+  P:  {broadJump:[100,116],cmjHeight:[26,34],sixtyYard:[6.9,7.6],split10:[1.60,1.75],fly10:[1.05,1.20],homeToFirst:[4.30,4.80],backSquatMax:[275,385],frontSquatMax:[225,315],trapBarMax:[365,495],medBallVelo:[34,44],benchMax:[185,265],...VALD,...HIT,...PITCH},
+  C:  {broadJump:[96,110], cmjHeight:[24,32],sixtyYard:[7.0,7.7],split10:[1.62,1.78],fly10:[1.08,1.22],homeToFirst:[4.40,4.90],backSquatMax:[315,425],frontSquatMax:[245,335],trapBarMax:[405,535],medBallVelo:[34,44],benchMax:[205,285],...VALD,...HIT,...PITCH},
+  IF: {broadJump:[100,116],cmjHeight:[27,35],sixtyYard:[6.7,7.3],split10:[1.55,1.70],fly10:[1.00,1.14],homeToFirst:[4.15,4.55],backSquatMax:[295,405],frontSquatMax:[235,325],trapBarMax:[385,515],medBallVelo:[35,45],benchMax:[195,275],...VALD,...HIT,...PITCH},
+  OF: {broadJump:[102,118],cmjHeight:[28,36],sixtyYard:[6.5,7.1],split10:[1.52,1.66],fly10:[0.96,1.10],homeToFirst:[4.05,4.45],backSquatMax:[295,405],frontSquatMax:[235,325],trapBarMax:[385,515],medBallVelo:[35,45],benchMax:[195,275],...VALD,...HIT,...PITCH},
 };
 
 const ALL_METRICS = [
@@ -60,6 +60,7 @@ const ALL_METRICS = [
   {key:'split10',       label:'10-yd Split',          unit:'s',   max:2.0, hb:false, fmt:v=>v.toFixed(2), color:'#a78bfa', group:'speed'},
   {key:'fly10',         label:'10-yd Fly',            unit:'s',   max:1.5, hb:false, fmt:v=>v.toFixed(2), color:'#C084FC', group:'speed'},
   {key:'homeToFirst',   label:'Home to 1st',          unit:'s',   max:5.5, hb:false, fmt:v=>v.toFixed(2), color:'#F472B6', group:'speed'},
+  {key:'backSquatMax',  label:'Back Squat (1RM)',     unit:'lbs', max:550, hb:true,  fmt:v=>Math.round(v),color:'#10B981', group:'strength'},
   {key:'frontSquatMax', label:'Front Squat (1RM)',    unit:'lbs', max:450, hb:true,  fmt:v=>Math.round(v),color:'#34D399', group:'strength'},
   {key:'trapBarMax',    label:'Trap Bar DL (1RM)',    unit:'lbs', max:650, hb:true,  fmt:v=>Math.round(v),color:'#34D399', group:'strength'},
   {key:'benchMax',      label:'Bench Press (1RM)',    unit:'lbs', max:350, hb:true,  fmt:v=>Math.round(v),color:'#22C55E', group:'strength'},
