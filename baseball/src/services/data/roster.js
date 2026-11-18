@@ -165,7 +165,48 @@ function refreshAll(){
   if(context.api.sb && context.api.currentUser && context.api._cloudDataLoaded) context.api.queueSaveAll();
 }
 
+// Baseball: imports such as VALD force plate or Trackman only add test data; they never
+// created roster entries (Hockey always had a roster first). This adds an athlete for every
+// name in the imported data that is not on the roster yet, with no position set, so the
+// coach assigns it in Roster Setup. Matching is exact (after normalisation and nickname
+// aliases) so two different players are never merged; typo variants can be merged in
+// Roster Setup.
+function namesInImportedData(){
+  const byKey=new Map();
+  const add=n=>{const t=String(n||'').trim().replace(/\s+/g,' ');if(!t)return;const k=context.api.nameKey(t);if(k&&!byKey.has(k))byKey.set(k,t);};
+  for(const s of context.api.SESSIONS||[]) add(s.athlete_name);
+  for(const h of context.api.KPI_HISTORY||[]) add(h.athlete_name);
+  for(const r of context.api.TRACKMAN||[]){add(r.pitcher_name);add(r.batter_name);}
+  return byKey;
+}
+function missingRosterNames(){
+  const onRoster=new Set(ATHLETES.map(a=>context.api.nameKey(a._canonicalName||a.name)));
+  return [...namesInImportedData()].filter(([k])=>!onRoster.has(k)).map(([,name])=>name);
+}
+function addAthletesFromData({quiet=false}={}){
+  const names=missingRosterNames();
+  if(!names.length){if(!quiet)context.api.toast?.('Every athlete in the imported data is already on the roster');return 0;}
+  let id=ATHLETES.reduce((m,a)=>Math.max(m,Number(a.id)||0),0);
+  const fresh=names.map(name=>{
+    const parts=name.split(' ');
+    return {id:++id,name,_canonicalName:name,initials:((parts[0]||'?')[0]+(parts.length>1?parts[parts.length-1][0]:'')).toUpperCase(),
+      pos:POS_DEFAULT,yr:'',av:context.api.avCls(id),_posLocked:false,_nameLocked:false,_sources:[],trend:[]};
+  });
+  ATHLETES=[...ATHLETES,...fresh];
+  context.api.enrichAthletesFromSessions?.();
+  context.api.applyBestRecentValues?.();
+  context.api.rescoreAllAthletes?.();
+  for(const a of fresh) context.api.queueSave?.(a);
+  context.api.refreshAll?.();
+  const active=context.activeFeature?.(); if(active) context.refreshFeature?.(active);
+  context.api.toast?.(`✓ Added ${fresh.length} athlete${fresh.length===1?'':'s'} to the roster — set their positions in Roster Setup`,6000);
+  return fresh.length;
+}
+const POS_DEFAULT='IF'; // shown as "unassigned" until a position is saved (_posLocked)
+
 return Object.defineProperties({}, {
+  missingRosterNames: {enumerable:true, configurable:true, get:()=>missingRosterNames},
+  addAthletesFromData: {enumerable:true, configurable:true, get:()=>addAthletesFromData},
   ATHLETES: {enumerable:true, configurable:true, get:()=>ATHLETES, set:value=>{ATHLETES=value;}},
   posIsSet: {enumerable:true, configurable:true, get:()=>posIsSet},
   unsetCount: {enumerable:true, configurable:true, get:()=>unsetCount},

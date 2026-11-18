@@ -5,7 +5,7 @@
         <div style="font-size:11px;color:var(--text3);font-family:var(--fm);margin-top:3px;">Assign positions once — they persist across all future imports.</div>
       </div>
       <div style="display:flex;gap:9px;align-items:center;">
-        <button data-onclick="openSprintAudit()" style="background:none;border:1px solid var(--border2);border-radius:var(--r);padding:9px 16px;color:var(--text2);font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;text-transform:uppercase;">⚠ Check Placeholder 10-yd Data</button>
+        <button id="roster-add-from-data" data-onclick="addAthletesFromData()" title="Adds every athlete found in imported force plate, testing or Trackman data who is not on the roster yet" style="background:none;border:1px solid var(--border2);border-radius:var(--r);padding:9px 16px;color:var(--text2);font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;text-transform:uppercase;">+ Add Athletes From Imported Data</button>
         <button data-onclick="saveAllPositions()" style="background:var(--orange);border:none;border-radius:var(--r);padding:9px 22px;color:#fff;font-family:var(--fh);font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;text-transform:uppercase;">✓ SAVE ALL POSITIONS</button>
       </div>
     </div>

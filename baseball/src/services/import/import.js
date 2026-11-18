@@ -1909,6 +1909,7 @@ async function commitCSV(replace){
     [replaceBtn,updateBtn].forEach(b=>{if(b){b.disabled=false;b.style.opacity='1';b.style.pointerEvents='';}});
     closeImport();
     await context.api.loadAllSessions();
+    context.api.addAthletesFromData({quiet:true}); // Baseball: new names in the file join the roster (position unset)
     context.refreshFeature('forceplate');
     if(document.getElementById('page-readiness')?.classList.contains('active')) context.refreshFeature('readiness'); // new dates show up in the dropdown right away
     if(saved===0&&firstError){
@@ -1942,6 +1943,7 @@ async function commitCSV(replace){
     if(progRow) progRow.style.display='none';
     closeImport();
     await context.api.loadAllSessions();
+    context.api.addAthletesFromData({quiet:true}); // Baseball: new names in the file join the roster (position unset)
     context.refreshFeature('forceplate');
     if(document.getElementById('page-readiness')?.classList.contains('active')) context.refreshFeature('readiness'); // new dates show up in the dropdown right away
     if(saved===0&&firstError){
