@@ -17,3 +17,8 @@ baseball/dist/
 baseball/.env*
 !baseball/.env.example
 baseball/test-results/
+
+mens-basketball/dist/
+mens-basketball/.env*
+!mens-basketball/.env.example
+mens-basketball/test-results/

@@ -1,6 +1,6 @@
 # BGSU Athletics Portal
 
-A small Vite + vanilla JS landing page that lists the independent sport dashboards (Hockey, Volleyball, Baseball) and links to them. Each sport remains its own app (`hockey/`, `volleyball/`, `baseball/`) with its own dependencies, tests, build and Supabase sign-in. The portal contains no authentication and no athlete data: choosing a card only navigates to `<sport>/`, where that sport's login screen applies.
+A small Vite + vanilla JS landing page that lists the independent sport dashboards (Hockey, Volleyball, Baseball, Men's Basketball) and links to them. Each sport remains its own app (`hockey/`, `volleyball/`, `baseball/`) with its own dependencies, tests, build and Supabase sign-in. The portal contains no authentication and no athlete data: choosing a card only navigates to `<sport>/`, where that sport's login screen applies.
 
 ## Run locally (one command, one port)
 
@@ -53,7 +53,7 @@ Each sport also has an **Explore Demo** button on its login screen that opens th
 
 ## GitHub Pages deployment
 
-- **Site:** https://bgsusc.github.io/bgsu-athletics/ (Hockey `/hockey/`, Volleyball `/volleyball/`, Baseball `/baseball/`; Demo: append `#demo`)
+- **Site:** https://bgsusc.github.io/bgsu-athletics/ (Hockey `/hockey/`, Volleyball `/volleyball/`, Baseball `/baseball/`, Men's Basketball `/mens-basketball/`; Demo: append `#demo`)
 - **Repo:** https://github.com/bgsusc/bgsu-athletics, deploys from the `main` branch via `.github/workflows/deploy-pages.yml` (Settings > Pages > Source: GitHub Actions).
 - **Publish an update:** commit, then `git push origin main`. The workflow installs from lockfiles, runs unit tests, builds the portal and both sports, runs `tests/pages-check.js` (serves `dist/` under `/bgsu-athletics/` and drives all 23 features in Demo Mode), then deploys. It can also be run manually from the Actions tab.
 - **Local:** `npm run install:all`, `npm run dev`, `npm run build`, `npm run preview`, `node tests/pages-check.js` (needs Chrome; `BGSU_BROWSER` overrides the path). All asset URLs are relative (`base: './'`), so no base-path config is needed.

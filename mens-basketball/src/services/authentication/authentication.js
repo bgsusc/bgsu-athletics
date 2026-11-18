@@ -1,0 +1,235 @@
+// Men’s Basketball app module (started from the Men’s Basketball app).
+import {sharedProjectClient,hasSportAccess} from '../data/shared-project.js';
+// Dependencies are supplied per application instance, never through window.
+export function createModule(context) {
+const document=context.document;
+const window=context.window;
+const Chart=context.Chart;
+const XLSX=context.XLSX;
+const setTimeout=context.setTimeout;
+const clearTimeout=context.clearTimeout;
+const requestAnimationFrame=context.requestAnimationFrame;
+
+const SUPABASE_URL = context.config.supabaseUrl;
+
+
+const SUPABASE_ANON_KEY = context.config.supabaseKey;
+
+
+let sb = null;
+
+// Password recovery: a reset-email link signs the person in with a short-lived recovery
+// session. That session is only for choosing a new password: the dashboard (and the
+// Men’s Basketball access check, which signs people out) must not run on it, or the session is
+// gone before the new password is saved ("Auth session missing").
+let recoveryMode = false;   // PASSWORD_RECOVERY seen
+let recoveryHint = false;   // the URL is a recovery link (read before supabase-js consumes it)
+let recoveryLinkError = ''; // the link was expired / already used
+function readRecoveryLink(){
+  const loc=window.location||{};
+  const params=new URLSearchParams(String(loc.hash||'').replace(/^#/,'')+'&'+String(loc.search||'').replace(/^[?]/,''));
+  recoveryLinkError=params.get('error_description')||params.get('error')||'';
+  recoveryHint=!recoveryLinkError&&params.get('type')==='recovery';
+}
+function showResetScreen(){
+  recoveryMode=true;
+  document.getElementById('login-overlay').style.display='none';
+  document.getElementById('reset-password-overlay').style.display='flex';
+}
+
+// Supabase client
+let currentUser = null;
+
+// signed-in coach
+let syncing = false;
+
+// sync in progress
+let isLocalChange = false;
+
+// suppress realtime echo
+
+// Initialize Supabase client (after library loads)
+function initSupabase(){
+  if(context.api.demoMode) return false; // Demo Mode never creates a real client
+  if(!context.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY){
+    setSyncStatus('error','LIBRARY MISSING');
+    document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local, then restart Vite.</span>';
+    return false;
+  }
+  readRecoveryLink();
+  sb = sharedProjectClient(context.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
+
+  // A password-reset email link logs the person in directly (the link itself
+  // IS a valid session token) — Supabase fires a PASSWORD_RECOVERY event when
+  // that happens, distinct from a normal sign-in. Without handling it, someone
+  // clicking "reset password" just silently lands in the dashboard with their
+  // OLD password unchanged and no way to actually set a new one. Catch that
+  // case here and show the "set new password" screen instead.
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(event==='PASSWORD_RECOVERY') showResetScreen();
+  });
+
+  return true;
+}
+
+// ── Forgot password ─────────────────────────────────────────────
+async function doForgotPassword(){
+  const email=document.getElementById('login-email').value.trim();
+  const msg=document.getElementById('login-msg');
+  if(!email){msg.innerHTML='<span style="color:var(--red);">Enter your email address above first, then click "Forgot password?"</span>';return;}
+  if(!sb&&!initSupabase()) return;
+  msg.innerHTML='<span style="color:var(--text3);">Sending reset email...</span>';
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+    if(error) throw error;
+    msg.innerHTML='<span style="color:var(--green);">✓ Check your email for a password reset link.</span>';
+  } catch(e){
+    msg.innerHTML='<span style="color:var(--red);">'+(e.message||'Could not send reset email')+'</span>';
+  }
+}
+
+// ── Set new password (after arriving via a reset email link) ───────
+async function doSetNewPassword(){
+  const pw=document.getElementById('reset-password-new').value;
+  const pw2=document.getElementById('reset-password-confirm').value;
+  const msg=document.getElementById('reset-password-msg');
+  const btn=document.getElementById('reset-password-btn');
+  if(!pw||!pw2){msg.innerHTML='<span style="color:var(--red);">Please fill in both fields.</span>';return;}
+  if(pw!==pw2){msg.innerHTML='<span style="color:var(--red);">Passwords don\'t match.</span>';return;}
+  if(pw.length<6){msg.innerHTML='<span style="color:var(--red);">Password must be at least 6 characters.</span>';return;}
+  btn.disabled=true;btn.textContent='SAVING...';
+  msg.innerHTML='<span style="color:var(--text3);">Saving new password...</span>';
+  try{
+    const {data,error}=await sb.auth.updateUser({password:pw});
+    if(error) throw error;
+    currentUser=data.user;
+    recoveryMode=false;recoveryHint=false;
+    msg.innerHTML='<span style="color:var(--green);">✓ Password updated. Loading dashboard...</span>';
+    setTimeout(async ()=>{
+      document.getElementById('reset-password-overlay').style.display='none';
+      await onLoginSuccess();
+    }, 800);
+  } catch(e){
+    msg.innerHTML='<span style="color:var(--red);">'+(e.message||'Could not update password')+'</span>';
+    btn.disabled=false;btn.textContent='SET NEW PASSWORD';
+  }
+}
+
+// ── Sync status indicator ────────────────────────────────────────
+function setSyncStatus(state, text){
+  const dot=document.getElementById('sync-dot');
+  const txt=document.getElementById('sync-text');
+  if(!dot||!txt) return;
+  txt.textContent=text||state.toUpperCase();
+  const colors={
+    online:'var(--green)',
+    syncing:'var(--yellow)',
+    offline:'var(--text3)',
+    error:'var(--red)',
+  };
+  dot.style.background=colors[state]||'var(--text3)';
+  if(state==='syncing'){dot.style.animation='pulse 1s infinite';}
+  else{dot.style.animation='';}
+}
+
+// ── Login ────────────────────────────────────────────────────────
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  const msg=document.getElementById('login-msg');
+  const btn=document.getElementById('login-btn');
+  if(!email||!password){msg.innerHTML='<span style="color:var(--red);">Email and password required.</span>';return;}
+  if(!sb&&!initSupabase()) return;
+  btn.disabled=true;btn.textContent='SIGNING IN...';
+  msg.innerHTML='<span style="color:var(--text3);">Authenticating...</span>';
+  try{
+    const {data, error} = await sb.auth.signInWithPassword({email, password});
+    if(error) throw error;
+    currentUser = data.user;
+    msg.innerHTML='<span style="color:var(--green);">✓ Signed in. Loading roster...</span>';
+    await onLoginSuccess();
+  } catch(e){
+    msg.innerHTML='<span style="color:var(--red);">'+(e.message||'Sign-in failed')+'</span>';
+    btn.disabled=false;btn.textContent='SIGN IN';
+  }
+}
+
+
+async function doSignOut(){
+  if(context.api.demoMode){context.api.exitDemo();return;}
+  if(!sb) return;
+  if(!confirm('Sign out? Any unsaved local changes will be lost.')) return;
+  await sb.auth.signOut();
+  location.reload();
+}
+
+
+async function onLoginSuccess(){
+  // The Supabase project is shared by several sports: a valid login is not enough,
+  // the account must also be granted Men’s Basketball (private.sport_access).
+  if(!context.api.demoMode){
+    let allowed=false;
+    try{allowed=await hasSportAccess(sb);}catch(e){console.error('Sport access check failed:',e);}
+    if(!allowed){
+      await sb.auth.signOut().catch(()=>{});
+      currentUser=null;
+      document.getElementById('login-overlay').style.display='flex';
+      document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">This account does not have access to the Men’s Basketball dashboard. Ask the dashboard administrator to grant it.</span>';
+      setSyncStatus('error','NO ACCESS');
+      return;
+    }
+  }
+  document.getElementById('login-overlay').style.display='none';
+  setSyncStatus('syncing','LOADING');
+  await context.api.loadAllSessions();
+  await context.api.loadAllAthletes();
+  context.api.enrichAthletesFromSessions();  // merge session metrics into ATHLETES for dashboard
+  await context.api.loadKpiHistory();
+  context.api.applyBestRecentValues();       // upgrade current values to best-in-9-months where history shows a better result
+  context.api.rescoreAllAthletes();          // composite from the fully merged values (fixed baseline)
+  context.api.subscribeToChanges();
+  setSyncStatus('online','SYNCED');
+  // Re-render the feature the user is on (dashboard by default) with the loaded data. A fixed
+  // navigate('dashboard') would override any feature the user opened while data was loading.
+  const landing=()=>context.activeFeature?.()||'dashboard';
+  context.navigate(landing());
+  setTimeout(()=>context.navigate(landing()), 300);
+}
+
+// ── Boot: check for existing session, otherwise show login ───────
+async function bootSupabase(){
+  if(context.api.demoMode) return;
+  if(!initSupabase()) return;
+  const {data:{session}} = await sb.auth.getSession();
+  if(recoveryLinkError){
+    document.getElementById('login-msg').innerHTML='<span style="color:var(--red);">That password reset link has expired or was already used. Enter your email and click "Forgot password?" for a new one.</span>';
+  }
+  if(session&&(recoveryMode||recoveryHint)){
+    currentUser=session.user;
+    showResetScreen();                         // never load data on a recovery session
+  } else if(session){
+    currentUser=session.user;
+    await onLoginSuccess();
+  } else {
+    setSyncStatus('offline','SIGNED OUT');
+  }
+}
+
+return Object.defineProperties({}, {
+  SUPABASE_URL: {enumerable:true, configurable:true, get:()=>SUPABASE_URL},
+  SUPABASE_ANON_KEY: {enumerable:true, configurable:true, get:()=>SUPABASE_ANON_KEY},
+  sb: {enumerable:true, configurable:true, get:()=>sb, set:value=>{sb=value;}},
+  currentUser: {enumerable:true, configurable:true, get:()=>currentUser, set:value=>{currentUser=value;}},
+  syncing: {enumerable:true, configurable:true, get:()=>syncing, set:value=>{syncing=value;}},
+  isLocalChange: {enumerable:true, configurable:true, get:()=>isLocalChange, set:value=>{isLocalChange=value;}},
+  initSupabase: {enumerable:true, configurable:true, get:()=>initSupabase},
+  recoveryMode: {enumerable:true, configurable:true, get:()=>recoveryMode},
+  doForgotPassword: {enumerable:true, configurable:true, get:()=>doForgotPassword},
+  doSetNewPassword: {enumerable:true, configurable:true, get:()=>doSetNewPassword},
+  setSyncStatus: {enumerable:true, configurable:true, get:()=>setSyncStatus},
+  doLogin: {enumerable:true, configurable:true, get:()=>doLogin},
+  doSignOut: {enumerable:true, configurable:true, get:()=>doSignOut},
+  onLoginSuccess: {enumerable:true, configurable:true, get:()=>onLoginSuccess},
+  bootSupabase: {enumerable:true, configurable:true, get:()=>bootSupabase}
+});
+}

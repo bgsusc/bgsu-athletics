@@ -5,10 +5,12 @@
 // entry is enabled AND an application actually responds at that path.
 const hockeyIcon='<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8l16 38c1 3 4 5 8 5h14"/><path d="M20 8h-6"/><ellipse cx="18" cy="54" rx="9" ry="3.5" fill="currentColor" stroke="none"/></svg>';
 const baseballIcon='<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="23"/><path d="M18 14c6 8 6 28 0 36M46 14c-6 8-6 28 0 36"/><path d="M20 21l4-2M21 28l4-1M21 36l4 1M20 43l4 2M44 21l-4-2M43 28l-4-1M43 36l-4 1M44 43l-4 2" stroke-width="2.5"/></svg>';
+const basketballIcon='<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="23"/><path d="M9 32h46M32 9v46"/><path d="M16 15c8 8 8 26 0 34M48 15c-8 8-8 26 0 34"/></svg>';
 const volleyballIcon='<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="23"/><path d="M32 9c-8 8-10 20-4 30M9 28c12-4 24 0 29 10M44 10c-4 10 0 22 10 28M20 51c4-9 14-14 25-11"/></svg>';
 
 export const sports=[
   {id:'hockey',name:'Hockey',description:'Force plate, readiness, workload and performance analytics.',icon:hockeyIcon,path:'hockey/',enabled:true,order:1},
   {id:'volleyball',name:'Volleyball',description:'Jump testing, readiness, Kinexon workload and leaderboards.',icon:volleyballIcon,path:'volleyball/',enabled:true,order:2},
   {id:'baseball',name:'Baseball',description:'Speed, strength and force plate testing with Trackman exit and pitch velocity.',icon:baseballIcon,path:'baseball/',enabled:true,order:3},
+  {id:'mens-basketball',name:'Men\'s Basketball',description:'Weekly force plate jumps and readiness, approach and standing vertical, court sprint, lane agility, mile run and strength.',icon:basketballIcon,path:'mens-basketball/',enabled:true,order:4},
 ];

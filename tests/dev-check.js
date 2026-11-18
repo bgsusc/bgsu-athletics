@@ -12,6 +12,7 @@ try{
   assert.match((await get('/hockey/')).body,/hockey-app/);
   assert.match((await get('/volleyball/')).body,/volleyball-app/);
   assert.match((await get('/baseball/')).body,/baseball-app/);
-  console.log('PASS dev server serves portal, /hockey/, /volleyball/ and /baseball/');
+  assert.match((await get('/mens-basketball/')).body,/mens-basketball-app/);
+  console.log('PASS dev server serves portal and every sport');
 }finally{child.kill();}
 process.exit(0);

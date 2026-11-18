@@ -13,7 +13,7 @@ const BASE=(process.env.BASE||'/bgsu-athletics/').replace(/\/?$/,'/');
 const PORT=Number(process.env.PORT||5172),ORIGIN=`http://127.0.0.1:${PORT}`;
 const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.map':'application/json'};
 const avatarPages=[];
-const SPORTS=[{id:'hockey',features:12,players:14},{id:'volleyball',features:11,players:14},{id:'baseball',features:12,players:16}];
+const SPORTS=[{id:'hockey',features:12,players:14},{id:'volleyball',features:11,players:14},{id:'baseball',features:12,players:16},{id:'mens-basketball',features:11,players:15}];
 const BACKEND=/\.supabase\.(co|in)|\/rest\/v1|\/auth\/v1|\/storage\/v1|\/realtime\/v1/i;
 
 const server=http.createServer((req,res)=>{
@@ -69,7 +69,7 @@ try{
     // Direct deep link + refresh keep demo.
     await page.goto(`${ORIGIN}${BASE}${sport.id}/#demo`);await page.reload();
     await page.waitForFunction(()=>document.getElementById('demo-banner'),null,{timeout:20000});
-    await page.waitForFunction(()=>/Demo (Forward|Defense|Goalie|Setter|Outside|Middle|Libero|Opposite|Hitter|Athlete|Pitcher|Catcher|Infielder|Outfielder)/i.test(document.querySelector('[data-feature-root]')?.shadowRoot?.textContent||''),null,{timeout:20000});
+    await page.waitForFunction(()=>/Demo (Forward|Defense|Goalie|Setter|Outside|Middle|Libero|Opposite|Hitter|Athlete|Pitcher|Catcher|Infielder|Outfielder|Guard|Center)/i.test(document.querySelector('[data-feature-root]')?.shadowRoot?.textContent||''),null,{timeout:20000});
     // Regression: a click made while the demo data is still loading must not be overridden by the
     // post-load re-render (it used to jump back to the dashboard), and every synthetic player must be distinct.
     await page.goto(`${ORIGIN}${BASE}${sport.id}/#demo`);

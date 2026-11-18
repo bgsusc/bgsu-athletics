@@ -27,6 +27,7 @@ jobs:
             hockey/package-lock.json
             volleyball/package-lock.json
             baseball/package-lock.json
+            mens-basketball/package-lock.json
 
       - name: Install dependencies (lockfiles)
         run: npm run install:all
@@ -43,6 +44,7 @@ jobs:
           done
           # Baseball has no private reference file, so its whole unit suite runs in CI.
           npm test --prefix baseball
+          npm test --prefix mens-basketball
 
       # Supabase values are optional repository VARIABLES (not secrets): VITE_ values are
       # public in the built JS. Without them the site is a demo-only build.
@@ -56,6 +58,8 @@ jobs:
           VOLLEYBALL_SUPABASE_ANON_KEY: ${{ vars.VOLLEYBALL_SUPABASE_ANON_KEY }}
           BASEBALL_SUPABASE_URL: ${{ vars.BASEBALL_SUPABASE_URL }}
           BASEBALL_SUPABASE_ANON_KEY: ${{ vars.BASEBALL_SUPABASE_ANON_KEY }}
+          MBB_SUPABASE_URL: ${{ vars.MBB_SUPABASE_URL }}
+          MBB_SUPABASE_ANON_KEY: ${{ vars.MBB_SUPABASE_ANON_KEY }}
         run: |
           if [ -n "$HOCKEY_SUPABASE_URL" ] && [ -n "$HOCKEY_SUPABASE_ANON_KEY" ]; then
             printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' "$HOCKEY_SUPABASE_URL" "$HOCKEY_SUPABASE_ANON_KEY" > hockey/.env.production
@@ -72,13 +76,18 @@ jobs:
           else
             echo "::notice::Baseball Supabase variables not set - Baseball builds demo-only."
           fi
+          if [ -n "$MBB_SUPABASE_URL" ] && [ -n "$MBB_SUPABASE_ANON_KEY" ]; then
+            printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' "$MBB_SUPABASE_URL" "$MBB_SUPABASE_ANON_KEY" > mens-basketball/.env.production
+          else
+            echo "::notice::Men's Basketball Supabase variables not set - it builds demo-only."
+          fi
 
-      - name: Build portal, Hockey, Volleyball and Baseball
+      - name: Build portal and every sport
         run: npm run build
 
       - name: Verify build output
         run: |
-          for f in dist/index.html dist/assets dist/hockey/index.html dist/hockey/assets dist/volleyball/index.html dist/volleyball/assets dist/baseball/index.html dist/baseball/assets; do
+          for f in dist/index.html dist/assets dist/hockey/index.html dist/hockey/assets dist/volleyball/index.html dist/volleyball/assets dist/baseball/index.html dist/baseball/assets dist/mens-basketball/index.html dist/mens-basketball/assets; do
             test -e "$f" || { echo "::error::missing $f"; exit 1; }
           done
           if grep -rIlE 'service_role|sb_secret_' dist; then echo "::error::secret-like string in build"; exit 1; fi

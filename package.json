@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "install:all": "npm ci && npm ci --prefix hockey && npm ci --prefix volleyball && npm ci --prefix baseball",
+    "install:all": "npm ci && npm ci --prefix hockey && npm ci --prefix volleyball && npm ci --prefix baseball && npm ci --prefix mens-basketball",
     "dev": "node tools/dev.mjs",
     "build": "node tools/build.mjs",
     "preview": "node tools/preview.mjs",
     "test": "node --test tests/portal.test.js",
     "test:browser": "node tests/browser-check.js && node tests/dev-check.js",
-    "test:all": "npm test && npm run build && npm run test:browser && npm test --prefix hockey && npm test --prefix volleyball && npm test --prefix baseball"
+    "test:all": "npm test && npm run build && npm run test:browser && npm test --prefix hockey && npm test --prefix volleyball && npm test --prefix baseball && npm test --prefix mens-basketball"
   },
   "devDependencies": {
     "playwright-core": "1.56.1",

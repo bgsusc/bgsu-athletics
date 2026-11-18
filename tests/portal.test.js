@@ -9,8 +9,8 @@ const sportPage=page('<!doctype html><html><body><div id="x-app"></div></body></
 const portalPage=page('<!doctype html><html><body><div id="portal-root"></div></body></html>');
 const base='http://localhost/';
 
-test('registry defines hockey, volleyball and baseball with required fields',()=>{
-  assert.deepEqual(sports.map(s=>s.id),['hockey','volleyball','baseball']);
+test('registry defines every sport with required fields',()=>{
+  assert.deepEqual(sports.map(s=>s.id),['hockey','volleyball','baseball','mens-basketball']);
   for(const s of sports)for(const key of ['id','name','description','icon','path','enabled','order'])assert.ok(s[key]!==undefined,`${s.id}.${key}`);
 });
 test('disabled and malformed sports are hidden; order is respected',()=>{
@@ -39,6 +39,6 @@ test('cards escape registry text',()=>{
   assert.doesNotMatch(renderCards([{id:'x',name:'<img onerror=1>',path:'x/'}]),/<img/);
 });
 test('portal renders no hardcoded sport cards in HTML and has no auth logic',()=>{
-  assert.doesNotMatch(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/Hockey|Volleyball|Baseball/);
+  assert.doesNotMatch(fs.readFileSync(new URL('../index.html',import.meta.url),'utf8'),/Hockey|Volleyball|Baseball|Basketball/);
   assert.doesNotMatch(fs.readFileSync(new URL('../src/portal.js',import.meta.url),'utf8'),/supabase|signIn|password/i);
 });
